@@ -1,12 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GamePhase, Question, GameState } from './types';
 import TileGrid from './components/TileGrid';
 import QuestionBox from './components/QuestionBox';
 
-// The mystery image provided by the user (simulated with a high-quality descriptive image of the same subject if base64 too long, but here we use a placeholder that matches the description)
+// The mystery image provided by the user
 const MYSTERY_IMAGE = "https://images.unsplash.com/photo-1582139329536-e7284fece509?q=80&w=2000&auto=format&fit=crop"; 
-// Note: In a real production environment, you'd paste the actual base64 of the officer image here.
 
 const QUESTIONS: Question[] = [
   {
@@ -91,20 +90,33 @@ const QUESTIONS: Question[] = [
   }
 ];
 
-const TILE_COUNT = 10; // 2x5 grid for 10 questions
+const TILE_COUNT = 10;
+
+/**
+ * Shuffles an array in place using Durstenfeld shuffle algorithm.
+ */
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
 
 const App: React.FC = () => {
   const [phase, setPhase] = useState<GamePhase>(GamePhase.SETUP);
-  const [gameState, setGameState] = useState<GameState>({
+  const [gameState, setGameState] = useState<GameState>(() => ({
     theme: 'India & Kerala Trivia',
     imageUrl: MYSTERY_IMAGE,
-    questions: QUESTIONS,
+    questions: shuffleArray(QUESTIONS),
     currentQuestionIndex: 0,
     revealedTiles: [],
     score: 0,
     totalTiles: TILE_COUNT
-  });
+  }));
   const [showFeedback, setShowFeedback] = useState<{ correct: boolean, explanation: string } | null>(null);
+  const [showBonusMessage, setShowBonusMessage] = useState(false);
 
   const startGame = () => {
     setPhase(GamePhase.PLAYING);
@@ -140,15 +152,17 @@ const App: React.FC = () => {
       }));
     } else {
       setPhase(GamePhase.REVEALED);
+      setShowBonusMessage(true);
     }
   };
 
   const resetGame = () => {
     setPhase(GamePhase.SETUP);
+    setShowBonusMessage(false);
     setGameState({
       theme: 'India & Kerala Trivia',
       imageUrl: MYSTERY_IMAGE,
-      questions: QUESTIONS,
+      questions: shuffleArray(QUESTIONS),
       currentQuestionIndex: 0,
       revealedTiles: [],
       score: 0,
@@ -244,7 +258,7 @@ const App: React.FC = () => {
         )}
 
         {phase === GamePhase.REVEALED && (
-          <div className="max-w-4xl w-full flex flex-col items-center animate-in fade-in duration-1000">
+          <div className="max-w-4xl w-full flex flex-col items-center animate-in fade-in duration-1000 relative">
             <div className="mb-8 text-center">
               <h2 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
                 Quiz Complete!
@@ -266,6 +280,38 @@ const App: React.FC = () => {
             >
               Play Again
             </button>
+
+            {/* Sticky/Fixed Bonus Message Popup */}
+            {showBonusMessage && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 p-4">
+                <div className="relative bg-slate-900 border-2 border-indigo-500 p-10 rounded-3xl shadow-[0_0_30px_rgba(99,102,241,0.4)] max-w-md w-full text-center">
+                  <button 
+                    onClick={() => setShowBonusMessage(false)}
+                    className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+                    aria-label="Close message"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                  <div className="w-16 h-16 bg-indigo-600/20 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
+                    🎁
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-4">Secret Reward!</h3>
+                  <p className="text-indigo-200 text-xl font-medium leading-relaxed italic">
+                    "Find me and Say <span className="text-white font-bold not-italic">Saadhanam Kayil undo</span> you will get the thrasher."
+                  </p>
+                  <div className="mt-8">
+                    <button 
+                      onClick={() => setShowBonusMessage(false)}
+                      className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-8 py-3 rounded-lg transition-all"
+                    >
+                      Got it!
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
