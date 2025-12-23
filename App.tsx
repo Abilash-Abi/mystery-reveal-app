@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { GamePhase, Question, GameState } from './types';
 import TileGrid from './components/TileGrid';
 import QuestionBox from './components/QuestionBox';
@@ -92,9 +92,6 @@ const QUESTIONS: Question[] = [
 
 const TILE_COUNT = 10;
 
-/**
- * Shuffles an array in place using Durstenfeld shuffle algorithm.
- */
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -169,6 +166,8 @@ const App: React.FC = () => {
       totalTiles: TILE_COUNT
     });
   };
+
+  const isPerfect = gameState.score === TILE_COUNT;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 flex flex-col items-center justify-center p-4">
@@ -260,17 +259,22 @@ const App: React.FC = () => {
         {phase === GamePhase.REVEALED && (
           <div className="max-w-4xl w-full flex flex-col items-center animate-in fade-in duration-1000 relative">
             <div className="mb-8 text-center">
-              <h2 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
-                Quiz Complete!
+              <h2 className={`text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r ${isPerfect ? 'from-yellow-400 to-orange-500' : 'from-slate-400 to-slate-600'}`}>
+                {isPerfect ? 'Mystery Unlocked!' : 'Incomplete Reveal'}
               </h2>
-              <p className="text-slate-400">You scored <span className="text-white font-bold">{gameState.score} out of 10</span></p>
+              <p className="text-slate-400">
+                Final Score: <span className={`${isPerfect ? 'text-emerald-400' : 'text-red-400'} font-bold`}>{gameState.score} out of 10</span>
+              </p>
+              {!isPerfect && (
+                <p className="text-slate-500 text-sm mt-2">Get all questions correct next time to reveal the full image!</p>
+              )}
             </div>
 
-            <div className="relative group rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(34,197,94,0.3)] border-4 border-emerald-500 mb-10">
-              <img 
-                src={gameState.imageUrl!} 
-                alt="Revealed Mystery" 
-                className="w-full max-w-2xl h-auto"
+            <div className="mb-10 w-full max-w-lg">
+              <TileGrid 
+                imageUrl={gameState.imageUrl!} 
+                revealedTiles={gameState.revealedTiles} 
+                totalTiles={gameState.totalTiles} 
               />
             </div>
 
@@ -278,7 +282,7 @@ const App: React.FC = () => {
               onClick={resetGame}
               className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-12 py-4 rounded-xl transition-all shadow-lg shadow-blue-600/20"
             >
-              Play Again
+              Try Again
             </button>
 
             {/* Sticky/Fixed Bonus Message Popup */}
