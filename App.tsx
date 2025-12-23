@@ -5,7 +5,7 @@ import TileGrid from './components/TileGrid';
 import QuestionBox from './components/QuestionBox';
 
 // The mystery image provided by the user
-const MYSTERY_IMAGE = "https://images.unsplash.com/photo-1582139329536-e7284fece509?q=80&w=2000&auto=format&fit=crop"; 
+const MYSTERY_IMAGE = "https://github.com/Abilash-Abi/mystery-reveal-app/blob/main/istockphoto-174812474-612x612.jpg"; 
 
 const QUESTIONS: Question[] = [
   {
